@@ -1,0 +1,5 @@
+aiokafka
+asyncpg
+sqlalchemy[asyncio]
+pydantic-settings
+-e ../../shared
