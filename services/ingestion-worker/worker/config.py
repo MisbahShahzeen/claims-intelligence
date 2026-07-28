@@ -11,6 +11,11 @@ class Settings(BaseSettings):
     consumer_group: str = "ingestion-worker"
     idle_timeout_ms: int = 3000
 
+    gemini_api_key: str
+    gemini_model: str = "gemini-2.5-flash"
+    gemini_max_retries: int = 4
+    storage_root: str = "../../storage/documents"
+
 
 @lru_cache
 def get_settings() -> Settings:
