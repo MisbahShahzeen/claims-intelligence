@@ -6,3 +6,5 @@ node_modules/
 *.egg-info/
 build/
 dist/
+storage/
+police_report.txt

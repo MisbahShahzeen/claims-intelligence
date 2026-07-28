@@ -32,3 +32,9 @@ def topic_for(aggregate_type: str) -> Topic:
 class ClaimEvent(StrEnum):
     SUBMITTED = "claim.submitted"
     STATUS_CHANGED = "claim.status_changed"
+
+
+class DocumentEvent(StrEnum):
+    UPLOADED = "document.uploaded"
+    EXTRACTED = "document.extracted"
+    EXTRACTION_FAILED = "document.extraction_failed"

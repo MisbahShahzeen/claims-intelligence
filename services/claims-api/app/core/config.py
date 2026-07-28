@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     database_url: str
 
     cors_origins: list[str] = ["http://localhost:4200"]
+    storage_root: str = "../../storage/documents"
+    max_upload_bytes: int = 10 * 1024 * 1024
 
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"

@@ -4,7 +4,7 @@ from sqlalchemy import text
 
 from app.core.config import get_settings
 from app.core.db import engine
-from app.routers import auth, claims, users
+from app.routers import auth, claims, documents, users
 
 settings = get_settings()
 
@@ -20,6 +20,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(claims.router)
+app.include_router(documents.router)
 
 
 @app.get("/health/live")
