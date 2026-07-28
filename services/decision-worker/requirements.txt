@@ -1,0 +1,7 @@
+aiokafka
+asyncpg
+sqlalchemy[asyncio]
+pgvector
+pydantic-settings
+google-genai
+-e ../../shared

@@ -1,0 +1,90 @@
+[
+  {
+    "claim_reference": "CLM-2024-004182",
+    "product_type": "motor",
+    "loss_type": "collision",
+    "summary_text": "Rear-end collision at a signalised junction in Bengaluru. Insured vehicle stationary, struck from behind by a commercial vehicle. Damage to rear bumper, boot lid, and tail lamp assembly. FIR lodged same day, third party admitted liability at scene. Repair estimate from authorised service centre. No injuries. Claim assessed as straightforward and settled at assessed repair cost after deductible and depreciation on plastic parts.",
+    "outcome": "settled",
+    "claimed_amount": "118500.00",
+    "settled_amount": "94200.00",
+    "fraud_flag": false,
+    "risk_band": "low"
+  },
+  {
+    "claim_reference": "CLM-2024-006733",
+    "product_type": "motor",
+    "loss_type": "theft",
+    "summary_text": "Vehicle reported stolen from an unattended roadside location overnight. FIR lodged 62 hours after the stated incident time, with no explanation offered for the delay. Both original keys produced by the insured at inspection, and no evidence of forced entry at the scene. Vehicle never recovered. Investigation noted the policy had been incepted eleven weeks before the loss and that the insured had recently listed the vehicle for private sale. Claim declined.",
+    "outcome": "denied",
+    "claimed_amount": "680000.00",
+    "settled_amount": null,
+    "fraud_flag": true,
+    "risk_band": "high"
+  },
+  {
+    "claim_reference": "CLM-2025-001094",
+    "product_type": "motor",
+    "loss_type": "collision",
+    "summary_text": "Single vehicle collision with a roadside barrier at night. Driver was not the policyholder and held a learner permit only, with no qualified supervising driver present. Damage extensive to front end and suspension. Claim declined under the unlicensed driver exclusion. Insured did not dispute the licence position.",
+    "outcome": "denied",
+    "claimed_amount": "245000.00",
+    "settled_amount": null,
+    "fraud_flag": false,
+    "risk_band": "medium"
+  },
+  {
+    "claim_reference": "CLM-2025-002871",
+    "product_type": "motor",
+    "loss_type": "flood",
+    "summary_text": "Vehicle submerged during monsoon flooding in a residential basement car park. Water ingress to engine bay and cabin. Insured did not attempt to start the vehicle after submersion, which limited consequential engine damage. Hydrostatic lock not present. Assessed as a covered peril under own damage cover. Settled at repair cost with depreciation applied to electrical components.",
+    "outcome": "settled",
+    "claimed_amount": "310000.00",
+    "settled_amount": "268400.00",
+    "fraud_flag": false,
+    "risk_band": "low"
+  },
+  {
+    "claim_reference": "CLM-2025-004416",
+    "product_type": "motor",
+    "loss_type": "collision",
+    "summary_text": "Collision claim where the repair invoice substantially exceeded the pre-approval estimate and included replacement of components not listed in the original damage assessment. Repairs were completed before the surveyor inspected the vehicle, contrary to the inspection condition. Settlement made at the Company's assessment of reasonable repair cost rather than the invoiced amount. Insured accepted the reduced settlement.",
+    "outcome": "settled",
+    "claimed_amount": "420000.00",
+    "settled_amount": "247000.00",
+    "fraud_flag": false,
+    "risk_band": "medium"
+  },
+  {
+    "claim_reference": "CLM-2025-007205",
+    "product_type": "property",
+    "loss_type": "theft",
+    "summary_text": "Burglary at a residential property. Forced entry evidenced by damaged door frame and lock, photographed by the attending officer. FIR lodged within four hours. Contents claimed included declared jewellery with valuation certificates on file and undeclared electronics supported by purchase receipts. Jewellery settled at agreed value, electronics settled at market value less depreciation.",
+    "outcome": "settled",
+    "claimed_amount": "540000.00",
+    "settled_amount": "462000.00",
+    "fraud_flag": false,
+    "risk_band": "low"
+  },
+  {
+    "claim_reference": "CLM-2025-008890",
+    "product_type": "property",
+    "loss_type": "fire",
+    "summary_text": "Kitchen fire causing smoke and heat damage across two rooms. Fire service attended and recorded the cause as an unattended cooking appliance. Claim covered under insured perils. Contents inventory substantially exceeded what the loss adjuster observed on site, and several claimed items could not be evidenced by receipt or photograph. Settlement negotiated downward on the contents portion; building portion settled at reinstatement cost in full.",
+    "outcome": "settled",
+    "claimed_amount": "890000.00",
+    "settled_amount": "610000.00",
+    "fraud_flag": false,
+    "risk_band": "medium"
+  },
+  {
+    "claim_reference": "CLM-2026-000412",
+    "product_type": "property",
+    "loss_type": "storm",
+    "summary_text": "Storm damage to roof tiles and rainwater ingress to an upper floor bedroom. Meteorological records confirmed high winds in the area on the stated date. Loss adjuster noted pre-existing deterioration of the roof structure and attributed part of the damage to gradual wear rather than the storm event. Settlement covered the storm-attributable portion only, with the deteriorated element declined under the gradual deterioration exclusion.",
+    "outcome": "settled",
+    "claimed_amount": "275000.00",
+    "settled_amount": "160000.00",
+    "fraud_flag": false,
+    "risk_band": "low"
+  }
+]
