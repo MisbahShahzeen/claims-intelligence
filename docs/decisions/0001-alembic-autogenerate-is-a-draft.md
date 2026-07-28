@@ -42,3 +42,23 @@ miss. Rejected: the review step keeps the benefit and removes the risk.
 failures above (the sequence, the missing HNSW index) would not have failed at
 migration time. They would have failed later, somewhere else, looking like a
 different bug.
+
+## Addendum: the destructive case
+
+A fourth failure appeared when generating the assessments migration. Autogenerate
+emitted `drop_index` for both HNSW indexes on the vector columns, and matching
+`create_index` calls in `downgrade()`.
+
+The mechanism: autogenerate diffs the live database against SQLAlchemy model
+metadata. HNSW indexes exist in the database but cannot be expressed in model
+metadata, so every future autogenerate run sees them as indexes that should not
+exist and proposes dropping them.
+
+This is worse than the earlier three failures in kind, not just degree. The
+others produced errors or absent objects, which surface quickly. This one
+silently removes a working index. Similarity search would still return results,
+just via sequential scan, with no error raised anywhere.
+
+**Standing rule:** every autogenerate run on this project is checked with
+`grep -n "hnsw" <migration>` before applying. Expected result: no matches. Any
+match is removed from both `upgrade()` and `downgrade()`.
