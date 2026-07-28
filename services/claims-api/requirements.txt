@@ -7,3 +7,5 @@ alembic
 bcrypt
 PyJWT
 email-validator
+
+-e ../../shared

@@ -2,12 +2,14 @@ import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from claims_events import ClaimEvent
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.claim import Claim, ClaimStatus
 from app.models.claim_status_history import ActorType, ClaimStatusHistory
 from app.models.policy import Policy, PolicyStatus
+from app.events import record_event
 from app.models.user import User
 from app.schemas.claim import ClaimCreate
 from app.services.claim_state_machine import (
@@ -71,6 +73,21 @@ async def create_claim(session: AsyncSession, payload: ClaimCreate) -> Claim:
             reason="Claim submitted via FNOL intake",
         )
     )
+    record_event(
+        session,
+        event_type=ClaimEvent.SUBMITTED.value,
+        aggregate_type="claim",
+        aggregate_id=claim.id,
+        payload={
+            "claim_id": str(claim.id),
+            "claim_number": claim.claim_number,
+            "policy_id": str(claim.policy_id),
+            "loss_type": claim.loss_type,
+            "claimed_amount": str(claim.claimed_amount),
+            "status": claim.status,
+        },
+    )
+
     await session.commit()
     await session.refresh(claim)
     return claim
@@ -179,6 +196,21 @@ async def transition_claim(
             reason=reason,
         )
     )
+    record_event(
+        session,
+        event_type=ClaimEvent.STATUS_CHANGED.value,
+        aggregate_type="claim",
+        aggregate_id=claim.id,
+        payload={
+            "claim_id": str(claim.id),
+            "claim_number": claim.claim_number,
+            "from_status": from_status.value,
+            "to_status": to_status.value,
+            "actor_id": str(actor.id),
+            "settlement_amount": str(settlement_amount) if settlement_amount else None,
+        },
+    )
+
     await session.commit()
     await session.refresh(claim)
     return claim
