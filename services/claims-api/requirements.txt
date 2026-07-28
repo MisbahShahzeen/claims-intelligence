@@ -9,3 +9,5 @@ PyJWT
 email-validator
 
 -e ../../shared
+python-multipart
+python-multipart

@@ -1,18 +1,24 @@
 from app.models.claim import Claim, ClaimStatus, LossType, RiskBand, claim_number_seq
 from app.models.claim_status_history import ActorType, ClaimStatusHistory
+from app.models.document import AiUsage, Document, DocumentType, Extraction, ProcessingStatus
 from app.models.outbox import OutboxEvent, ProcessedEvent
 from app.models.policy import Policy, PolicyStatus, ProductType
 from app.models.user import User, UserRole
 
 __all__ = [
     "ActorType",
+    "AiUsage",
     "Claim",
     "ClaimStatus",
     "ClaimStatusHistory",
+    "Document",
+    "DocumentType",
+    "Extraction",
     "LossType",
     "OutboxEvent",
     "Policy",
     "PolicyStatus",
+    "ProcessingStatus",
     "ProcessedEvent",
     "ProductType",
     "RiskBand",
