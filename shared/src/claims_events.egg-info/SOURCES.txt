@@ -1,9 +1,0 @@
-pyproject.toml
-src/claims_events/__init__.py
-src/claims_events/envelope.py
-src/claims_events/topics.py
-src/claims_events.egg-info/PKG-INFO
-src/claims_events.egg-info/SOURCES.txt
-src/claims_events.egg-info/dependency_links.txt
-src/claims_events.egg-info/requires.txt
-src/claims_events.egg-info/top_level.txt
