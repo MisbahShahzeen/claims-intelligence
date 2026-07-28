@@ -1,0 +1,15 @@
+<main style="padding: 2rem; font-family: system-ui, sans-serif">
+  <h1>Dashboard</h1>
+
+  @if (user(); as currentUser) {
+    <p>Signed in as <strong>{{ currentUser.full_name }}</strong></p>
+    <p>Role: {{ currentUser.role }}</p>
+    <p>Authority limit: {{ currentUser.authority_limit }}</p>
+  } @else if (failed()) {
+    <p>Could not load your profile.</p>
+  } @else {
+    <p>Loading...</p>
+  }
+
+  <button type="button" (click)="signOut()">Sign out</button>
+</main>
