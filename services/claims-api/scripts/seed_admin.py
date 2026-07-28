@@ -10,7 +10,12 @@ from app.models.user import UserRole
 
 async def main() -> None:
     email = os.getenv("SEED_ADMIN_EMAIL", "admin@example.com")
-    password = os.getenv("SEED_ADMIN_PASSWORD", "ChangeThisAdmin123!")
+    password = os.getenv("SEED_ADMIN_PASSWORD")
+    if not password:
+        raise SystemExit(
+            "SEED_ADMIN_PASSWORD is required. Run:\n"
+            '  SEED_ADMIN_PASSWORD="your-password" python scripts/seed_admin.py'
+        )
 
     async with SessionLocal() as session:
         if await user_service.get_by_email(session, email):
