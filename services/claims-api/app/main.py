@@ -3,10 +3,13 @@ from sqlalchemy import text
 
 from app.core.config import get_settings
 from app.core.db import engine
+from app.routers import auth, users
 
 settings = get_settings()
 
 app = FastAPI(title=settings.app_name)
+app.include_router(auth.router)
+app.include_router(users.router)
 
 
 @app.get("/health/live")
