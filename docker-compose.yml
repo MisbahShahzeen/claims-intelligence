@@ -58,5 +58,58 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:19092
       DYNAMIC_CONFIG_ENABLED: "true"
 
+  metrics-exporter:
+    build: ./services/metrics-exporter
+    container_name: ci-metrics-exporter
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_DSN: postgresql://postgres:postgres@postgres:5432/claims
+      METRICS_PORT: 9102
+      POLL_INTERVAL_SECONDS: 15
+    ports:
+      - "9102:9102"
+
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    container_name: ci-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/prometheus/rules.yml:/etc/prometheus/rules.yml:ro
+      - promdata:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --web.enable-lifecycle
+    extra_hosts:
+      # Lets the container reach services running on the host. Required on
+      # Linux; already present on Docker Desktop but harmless to declare.
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: grafana/grafana:11.5.1
+    container_name: ci-grafana
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      # Anonymous viewing so a demo needs no login. Never do this in production.
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafanadata:/var/lib/grafana
+
 volumes:
   pgdata:
+  promdata:
+  grafanadata:

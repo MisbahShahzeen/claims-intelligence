@@ -1,0 +1,50 @@
+groups:
+  - name: claims-pipeline
+    rules:
+      # The backlog count alone is misleading: three rows can look fine while
+      # those same three have been stuck for an hour. Age is the real signal.
+      - alert: OutboxBacklogStalled
+        expr: relay_outbox_oldest_age_seconds > 120
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Outbox has rows older than two minutes"
+          description: >
+            The relay is not draining the outbox. Claims are being accepted but
+            no downstream processing is happening. Check the relay process and
+            Kafka connectivity.
+
+      - alert: RelayDown
+        expr: up{job="outbox-relay"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Outbox relay is not being scraped"
+          description: >
+            The relay is unreachable. Nothing is publishing events, so document
+            extraction and assessment have stopped.
+
+      - alert: HighLoginFailureRate
+        expr: |
+          sum(rate(claims_login_attempts_total{result="failed"}[5m]))
+            > 3 * sum(rate(claims_login_attempts_total{result="success"}[5m]))
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Login failures exceed successes threefold"
+          description: >
+            Possible credential stuffing. Check whether the rate limiter is
+            engaging and whether failures come from a single source.
+
+      - alert: ApiErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m]))
+            / sum(rate(http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 5 percent of requests are failing"

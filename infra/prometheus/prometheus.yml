@@ -1,0 +1,32 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/rules.yml
+
+scrape_configs:
+  # host.docker.internal reaches the host from inside the container. The
+  # services run on the host during development; in Phase 12 these targets
+  # become Kubernetes service discovery instead.
+  - job_name: claims-api
+    static_configs:
+      - targets: ['host.docker.internal:8000']
+        labels:
+          service: claims-api
+
+  - job_name: outbox-relay
+    static_configs:
+      - targets: ['host.docker.internal:9101']
+        labels:
+          service: outbox-relay
+
+  - job_name: metrics-exporter
+    static_configs:
+      - targets: ['metrics-exporter:9102']
+        labels:
+          service: metrics-exporter
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
