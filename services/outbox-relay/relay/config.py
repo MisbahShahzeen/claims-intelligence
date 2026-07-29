@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     poll_interval_seconds: float = 1.0
     batch_size: int = 100
     max_attempts: int = 5
+    metrics_port: int = 9101
 
 
 @lru_cache

@@ -19,6 +19,7 @@ from claims_events import EventEnvelope, topic_for
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+from relay import metrics
 from relay.config import get_settings
 
 logging.basicConfig(
@@ -42,6 +43,13 @@ MARK_PUBLISHED = text("""
     UPDATE claims.outbox SET published_at = now() WHERE id = :id
 """)
 
+BACKLOG = text("""
+    SELECT count(*) AS backlog,
+           COALESCE(EXTRACT(EPOCH FROM (now() - min(created_at))), 0)::int AS oldest_age
+    FROM claims.outbox
+    WHERE published_at IS NULL
+""")
+
 MARK_FAILED = text("""
     UPDATE claims.outbox
     SET attempts = attempts + 1, last_error = :error
@@ -63,6 +71,8 @@ class Relay:
             acks="all",
         )
         await self._producer.start()
+        metrics.serve(settings.metrics_port)
+        logger.info("metrics on :%d", settings.metrics_port)
         logger.info("connected to kafka at %s", settings.kafka_bootstrap_servers)
 
     async def stop(self) -> None:
@@ -103,6 +113,12 @@ class Relay:
                 )
                 rows = result.mappings().all()
 
+                # Recorded every cycle, including when the batch is empty, so a
+                # rising backlog is visible even while nothing is succeeding.
+                stats = (await session.execute(BACKLOG)).mappings().one()
+                metrics.outbox_backlog.set(stats["backlog"])
+                metrics.outbox_oldest_age_seconds.set(stats["oldest_age"])
+
                 for row in rows:
                     if await self._publish(session, row):
                         published += 1
@@ -117,18 +133,25 @@ class Relay:
             envelope = EventEnvelope.model_validate(row["envelope"])
             topic = topic_for(row["aggregate_type"])
 
-            await self._producer.send_and_wait(
-                topic.value,
-                value=envelope.to_json().encode("utf-8"),
-                key=envelope.partition_key,
-            )
+            with metrics.publish_seconds.time():
+                await self._producer.send_and_wait(
+                    topic.value,
+                    value=envelope.to_json().encode("utf-8"),
+                    key=envelope.partition_key,
+                )
             await session.execute(MARK_PUBLISHED, {"id": row["id"]})
+            metrics.events_published_total.labels(
+                event_type=envelope.event_type, topic=topic.value
+            ).inc()
             logger.info(
                 "published %s event_id=%s topic=%s", envelope.event_type, envelope.event_id, topic
             )
             return True
         except Exception as error:
             logger.warning("failed to publish outbox row %s: %s", row["id"], error)
+            metrics.events_failed_total.labels(
+                event_type=str(row.get("event_type", "unknown"))
+            ).inc()
             await session.execute(
                 MARK_FAILED, {"id": row["id"], "error": f"{type(error).__name__}: {error}"}
             )

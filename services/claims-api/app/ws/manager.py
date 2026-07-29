@@ -13,6 +13,8 @@ from typing import Any
 
 from fastapi import WebSocket
 
+from app.core import metrics
+
 logger = logging.getLogger("claims-api.ws")
 
 
@@ -35,6 +37,7 @@ class ConnectionManager:
     async def register(self, connection: Connection) -> None:
         async with self._lock:
             self._connections.add(connection)
+            metrics.websocket_connections.set(len(self._connections))
         logger.info(
             "ws connected user=%s role=%s (%d live)",
             connection.user_id,
@@ -45,6 +48,7 @@ class ConnectionManager:
     async def unregister(self, connection: Connection) -> None:
         async with self._lock:
             self._connections.discard(connection)
+            metrics.websocket_connections.set(len(self._connections))
         logger.info("ws disconnected user=%s (%d live)", connection.user_id, len(self._connections))
 
     async def broadcast(self, message: dict[str, Any]) -> int:

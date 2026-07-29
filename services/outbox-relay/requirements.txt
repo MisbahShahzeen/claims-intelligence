@@ -3,3 +3,4 @@ asyncpg
 sqlalchemy[asyncio]
 pydantic-settings
 -e ../../shared
+prometheus-client

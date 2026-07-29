@@ -6,6 +6,8 @@ from sqlalchemy import text
 
 from app.core.config import get_settings
 from app.core.db import engine
+from prometheus_fastapi_instrumentator import Instrumentator
+
 from app.events.consumer import consumer
 from app.routers import assessments, auth, claims, documents, stream, users
 
@@ -28,6 +30,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Health probes and /metrics are excluded: Kubernetes hits the probes
+# every few seconds, and including them would make latency percentiles
+# mostly measure probe traffic.
+Instrumentator(
+    excluded_handlers=["/metrics", "/health/live", "/health/ready"],
+).instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
 
 app.include_router(auth.router)
 app.include_router(users.router)

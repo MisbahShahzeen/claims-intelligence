@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import metrics
 from app.core.config import get_settings
 from app.core.db import get_session
 from app.core.deps import CurrentUser
@@ -44,6 +45,7 @@ async def login(
     )
 
     if not limit.allowed:
+        metrics.login_attempts_total.labels(result="throttled").inc()
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many login attempts. Try again shortly.",
@@ -52,10 +54,13 @@ async def login(
 
     user = await user_service.authenticate(session, payload.email, payload.password)
     if user is None:
+        metrics.login_attempts_total.labels(result="failed").inc()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
         )
+
+    metrics.login_attempts_total.labels(result="success").inc()
 
     # Clear the counter on success so a legitimate user who mistyped a few
     # times is not throttled for the rest of the window.

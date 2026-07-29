@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.claim import Claim, ClaimStatus
 from app.models.claim_status_history import ActorType, ClaimStatusHistory
 from app.models.policy import Policy, PolicyStatus
+from app.core import metrics
 from app.events import record_event
 from app.models.user import User
 from app.schemas.claim import ClaimCreate
@@ -73,6 +74,7 @@ async def create_claim(session: AsyncSession, payload: ClaimCreate) -> Claim:
             reason="Claim submitted via FNOL intake",
         )
     )
+    metrics.claims_submitted_total.labels(loss_type=claim.loss_type).inc()
     record_event(
         session,
         event_type=ClaimEvent.SUBMITTED.value,
@@ -175,6 +177,11 @@ async def transition_claim(
         )
     )
     if not result.allowed:
+        metrics.claim_transitions_rejected_total.labels(
+            from_status=from_status.value,
+            to_status=to_status.value,
+            outcome=result.outcome.value,
+        ).inc()
         raise ClaimServiceError(result.outcome, result.message or "Transition not permitted")
 
     claim.status = to_status.value
@@ -196,6 +203,11 @@ async def transition_claim(
             reason=reason,
         )
     )
+    metrics.claim_transitions_total.labels(
+        from_status=from_status.value,
+        to_status=to_status.value,
+        actor_type=ActorType.USER.value,
+    ).inc()
     record_event(
         session,
         event_type=ClaimEvent.STATUS_CHANGED.value,
