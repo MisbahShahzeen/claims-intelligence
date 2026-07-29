@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     storage_root: str = "../../storage/documents"
     max_upload_bytes: int = 10 * 1024 * 1024
 
+    kafka_bootstrap_servers: str = "localhost:9092"
+
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30

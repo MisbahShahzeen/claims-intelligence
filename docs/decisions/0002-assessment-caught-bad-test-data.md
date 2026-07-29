@@ -30,3 +30,22 @@ window, and documents that corroborate the narrative.
 
 Keeping the inconsistent claim is also worth doing. It is the only case in the
 fixture set that exercises the `indeterminate` path.
+
+## Second occurrence
+
+The fix attempt introduced a different inconsistency. A new claim was created
+with `loss_date: 2026-07-27` and a matching `loss_type: collision`, but reused
+the existing fixture documents, which describe an incident on 14 May 2026.
+
+The assessment returned `indeterminate` again, and explained why: the police
+report contradicts the claim record's date of loss, and if the document's date is
+correct then Section 3.7's 48-hour notification requirement was not met.
+
+It did not merely detect a mismatched field. It identified which of the two
+conflicting facts would change the outcome, and named the clause that makes it
+matter.
+
+## Standing note
+Two fixture errors, both found by the model rather than by us. Any future seed
+data must be internally consistent across the claim record and every attached
+document: loss type, loss date, amounts, and parties.

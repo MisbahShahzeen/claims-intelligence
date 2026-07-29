@@ -214,3 +214,73 @@ async def transition_claim(
     await session.commit()
     await session.refresh(claim)
     return claim
+
+
+async def apply_assessment(
+    session: AsyncSession,
+    claim_id: uuid.UUID,
+    *,
+    assessment_id: uuid.UUID,
+    risk_band: str,
+) -> Claim | None:
+    """Apply an assessment result to the claim aggregate.
+
+    Two distinct things happen here and they are deliberately separable:
+
+    1. The read model (risk_band, latest_assessment_id) is updated regardless of
+       status. These columns live on claims.claims so the dashboard can sort a
+       queue by risk without a cross-schema join. They are maintained by events,
+       which is why the assessment worker never writes to this table directly.
+
+    2. The claim is transitioned submitted -> triaged, but only if it is still
+       submitted. An adjuster who already pulled the claim into under_review
+       must not have it yanked back by a late-arriving assessment.
+    """
+    claim = await session.get(Claim, claim_id, with_for_update=True)
+    if claim is None:
+        return None
+
+    claim.risk_band = risk_band
+    claim.latest_assessment_id = assessment_id
+
+    from_status = ClaimStatus(claim.status)
+    if from_status is not ClaimStatus.SUBMITTED:
+        return claim
+
+    result = evaluate(
+        TransitionRequest(
+            from_status=from_status,
+            to_status=ClaimStatus.TRIAGED,
+            is_system=True,
+        )
+    )
+    if not result.allowed:
+        return claim
+
+    claim.status = ClaimStatus.TRIAGED.value
+    session.add(
+        ClaimStatusHistory(
+            claim_id=claim.id,
+            from_status=from_status.value,
+            to_status=ClaimStatus.TRIAGED.value,
+            actor_id=None,
+            actor_type=ActorType.SYSTEM.value,
+            reason=f"Automated assessment complete, risk band {risk_band}",
+        )
+    )
+
+    record_event(
+        session,
+        event_type=ClaimEvent.STATUS_CHANGED.value,
+        aggregate_type="claim",
+        aggregate_id=claim.id,
+        payload={
+            "claim_id": str(claim.id),
+            "claim_number": claim.claim_number,
+            "from_status": from_status.value,
+            "to_status": ClaimStatus.TRIAGED.value,
+            "actor_id": None,
+            "risk_band": risk_band,
+        },
+    )
+    return claim
