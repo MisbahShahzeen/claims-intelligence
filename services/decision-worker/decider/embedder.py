@@ -52,6 +52,18 @@ INSERT_USAGE = text("""
 """)
 
 
+def to_vector(value) -> list[float]:
+    """Normalise a pgvector column value to a list of floats.
+
+    Raw text() queries bypass SQLAlchemy's pgvector type registration, so
+    asyncpg returns the column as a string like "[0.1,0.2]" rather than a
+    sequence. Calling list() on that splits it into characters.
+    """
+    if isinstance(value, str):
+        return [float(part) for part in value.strip("[]").split(",") if part]
+    return [float(part) for part in value]
+
+
 def content_hash(text_value: str) -> str:
     return hashlib.sha256(text_value.strip().encode("utf-8")).hexdigest()
 
@@ -160,7 +172,7 @@ class Embedder:
         result = await session.execute(
             SELECT_CACHED, {"model": settings.embedding_model, "hashes": hashes}
         )
-        return {row.content_hash: list(row.embedding) for row in result}
+        return {row.content_hash: to_vector(row.embedding) for row in result}
 
     async def _call_with_retry(
         self, texts: list[str], task_type: str
