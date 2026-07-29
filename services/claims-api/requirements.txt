@@ -13,3 +13,5 @@ python-multipart
 python-multipart
 pgvector
 aiokafka
+prometheus-fastapi-instrumentator
+prometheus-client

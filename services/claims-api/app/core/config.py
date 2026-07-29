@@ -16,6 +16,9 @@ class Settings(BaseSettings):
 
     kafka_bootstrap_servers: str = "localhost:9092"
 
+    login_rate_limit: int = 10
+    login_rate_window_seconds: int = 300
+
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
