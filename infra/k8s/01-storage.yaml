@@ -1,0 +1,19 @@
+# Uploaded documents must be visible to both claims-api (which writes them) and
+# ingestion-worker (which reads them), so the volume is ReadWriteMany.
+#
+# This is the weakest part of the design and worth naming: a shared filesystem
+# does not scale and ties the two services to the same node. Production would
+# use object storage (S3/MinIO) with the app writing keys rather than paths -
+# which is exactly why storage sits behind app/core/storage.py rather than
+# being called inline.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: claims-documents
+  namespace: claims
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 2Gi

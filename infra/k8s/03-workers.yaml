@@ -1,0 +1,150 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: outbox-relay
+  namespace: claims
+  labels:
+    app: outbox-relay
+spec:
+  # Deliberately 1. The relay uses FOR UPDATE SKIP LOCKED so replicas would
+  # partition the backlog safely, but at this volume one is enough and a single
+  # replica keeps the published-event ordering easier to reason about.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: outbox-relay
+  template:
+    metadata:
+      labels:
+        app: outbox-relay
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9101"
+    spec:
+      containers:
+        - name: outbox-relay
+          image: outbox-relay:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: metrics
+              containerPort: 9101
+          envFrom:
+            - configMapRef:
+                name: claims-config
+          # No HTTP health endpoint on a worker, so liveness checks that the
+          # metrics port is accepting connections. A hung event loop stops
+          # serving metrics, so this catches a real failure mode rather than
+          # just process existence.
+          livenessProbe:
+            tcpSocket:
+              port: metrics
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: outbox-relay
+  namespace: claims
+spec:
+  selector:
+    app: outbox-relay
+  ports:
+    - name: metrics
+      port: 9101
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingestion-worker
+  namespace: claims
+  labels:
+    app: ingestion-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ingestion-worker
+  template:
+    metadata:
+      labels:
+        app: ingestion-worker
+    spec:
+      containers:
+        - name: ingestion-worker
+          image: ingestion-worker:0.1.0
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: claims-config
+          env:
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: claims-secrets
+                  key: GEMINI_API_KEY
+            - name: CONSUMER_GROUP
+              value: "ingestion-worker"
+          volumeMounts:
+            - name: documents
+              mountPath: /data/documents
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 192Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: documents
+          persistentVolumeClaim:
+            claimName: claims-documents
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: decision-worker
+  namespace: claims
+  labels:
+    app: decision-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: decision-worker
+  template:
+    metadata:
+      labels:
+        app: decision-worker
+    spec:
+      containers:
+        - name: decision-worker
+          image: decision-worker:0.1.0
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: claims-config
+          env:
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: claims-secrets
+                  key: GEMINI_API_KEY
+            - name: CONSUMER_GROUP
+              value: "decision-worker"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 640Mi

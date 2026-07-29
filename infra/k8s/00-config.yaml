@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: claims-config
+  namespace: claims
+data:
+  # host.minikube.internal reaches the developer machine, where Postgres and
+  # Kafka run under compose. In a real cluster these become managed service
+  # endpoints (RDS, MSK) and only these two values change.
+  DATABASE_URL: "postgresql+asyncpg://postgres:postgres@host.minikube.internal:5432/claims"
+  POSTGRES_DSN: "postgresql://postgres:postgres@host.minikube.internal:5432/claims"
+  KAFKA_BOOTSTRAP_SERVERS: "host.minikube.internal:29092"
+  ENVIRONMENT: "kubernetes"
+  GEMINI_MODEL: "gemini-2.5-flash"
+  EMBEDDING_MODEL: "gemini-embedding-001"
+  EMBEDDING_DIMENSIONS: "768"
+  STORAGE_ROOT: "/data/documents"
+  LOGIN_RATE_LIMIT: "50"
+  POLL_INTERVAL_SECONDS: "1.0"

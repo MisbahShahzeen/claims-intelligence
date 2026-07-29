@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: claims-api
+  namespace: claims
+  labels:
+    app: claims-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: claims-api
+  template:
+    metadata:
+      labels:
+        app: claims-api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: claims-api
+          # Never :latest. A pinned tag means a rollout is deliberate and a
+          # rollback is possible; :latest makes both accidental.
+          image: claims-api:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: claims-config
+          env:
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: claims-secrets
+                  key: JWT_SECRET_KEY
+            - name: CORS_ORIGINS
+              value: '["http://localhost:4200"]'
+          volumeMounts:
+            - name: documents
+              mountPath: /data/documents
+          # Liveness checks the process; readiness checks its dependencies.
+          # Wiring the database into liveness would restart every pod during a
+          # brief Postgres blip, turning a small outage into a large one.
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: documents
+          persistentVolumeClaim:
+            claimName: claims-documents
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: claims-api
+  namespace: claims
+spec:
+  type: NodePort
+  selector:
+    app: claims-api
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+      nodePort: 30080

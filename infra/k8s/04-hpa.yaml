@@ -1,0 +1,33 @@
+# HPA on claims-api only. The workers are Kafka consumers, so their useful
+# scaling signal is consumer lag, not CPU - and lag-based autoscaling needs KEDA
+# or a custom metrics adapter, which is out of scope here. Scaling a consumer on
+# CPU is close to meaningless: an idle consumer polling an empty topic uses
+# almost no CPU regardless of how far behind it is.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: claims-api
+  namespace: claims
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: claims-api
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleUp:
+      # React quickly to load.
+      stabilizationWindowSeconds: 30
+    scaleDown:
+      # Scale down slowly. Aggressive scale-down thrashes: a brief dip removes a
+      # pod, load returns, another pod starts, and connected WebSocket clients
+      # get dropped each time.
+      stabilizationWindowSeconds: 180
