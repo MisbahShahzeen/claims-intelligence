@@ -7,7 +7,7 @@ from sqlalchemy import text
 from app.core.config import get_settings
 from app.core.db import engine
 from app.events.consumer import consumer
-from app.routers import auth, claims, documents, stream, users
+from app.routers import assessments, auth, claims, documents, stream, users
 
 settings = get_settings()
 
@@ -32,6 +32,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(claims.router)
+app.include_router(assessments.router)
 app.include_router(documents.router)
 app.include_router(stream.router)
 

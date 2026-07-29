@@ -1,0 +1,70 @@
+<section class="queue">
+  <div class="controls">
+    <label>
+      <span class="control-label">Status</span>
+      <select (change)="setStatus($any($event.target).value)">
+        <option value="">All</option>
+        @for (status of statuses; track status) {
+          <option [value]="status">{{ labels[status] }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="checkbox">
+      <input type="checkbox" [checked]="mineOnly()" (change)="toggleMine()" />
+      <span>Assigned to me</span>
+    </label>
+
+    <span class="count">
+      @if (total() > 0) {
+        {{ showing().start }}–{{ showing().end }} of {{ total() }}
+      } @else {
+        No claims
+      }
+    </span>
+  </div>
+
+  @if (error(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  <table>
+    <thead>
+      <tr>
+        <th>Claim</th>
+        <th>Loss type</th>
+        <th class="numeric">Claimed</th>
+        <th>Risk</th>
+        <th>Status</th>
+        <th>Reported</th>
+      </tr>
+    </thead>
+    <tbody [class.stale]="loading()">
+      @for (claim of items(); track claim.id) {
+        <tr (click)="open(claim)" tabindex="0" (keydown.enter)="open(claim)">
+          <td class="mono">{{ claim.claim_number }}</td>
+          <td>{{ claim.loss_type }}</td>
+          <td class="numeric">{{ claim.claimed_amount | number: '1.2-2' }}</td>
+          <td>
+            @if (claim.risk_band; as band) {
+              <span class="risk" [class]="'risk-' + band">{{ band }}</span>
+            } @else {
+              <span class="muted">—</span>
+            }
+          </td>
+          <td><span class="status" [class]="'st-' + claim.status">{{ labels[claim.status] }}</span></td>
+          <td class="muted">{{ claim.reported_date | slice: 0 : 10 }}</td>
+        </tr>
+      } @empty {
+        <tr class="empty-row">
+          <td colspan="6">No claims match these filters.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <div class="pager">
+    <button type="button" [disabled]="!hasPrevious()" (click)="previous()">Previous</button>
+    <button type="button" [disabled]="!hasNext()" (click)="next()">Next</button>
+  </div>
+</section>

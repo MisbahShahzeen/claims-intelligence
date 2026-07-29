@@ -14,5 +14,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/dashboard/dashboard').then((m) => m.Dashboard),
   },
+  {
+    path: 'claims/:claimId',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/claims/claim-detail').then((m) => m.ClaimDetail),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];

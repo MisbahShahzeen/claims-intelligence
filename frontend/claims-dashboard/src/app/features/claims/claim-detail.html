@@ -1,0 +1,217 @@
+<main class="detail">
+  <button class="back" type="button" (click)="back()">← Queue</button>
+
+  @if (loading()) {
+    <p class="muted">Loading…</p>
+  } @else if (claim(); as c) {
+    <header>
+      <div>
+        <h1>{{ c.claim_number }}</h1>
+        <p class="sub">
+          {{ c.loss_type }} · loss {{ c.loss_date }} · reported {{ c.reported_date | slice: 0 : 10 }}
+        </p>
+      </div>
+      <div class="badges">
+        @if (c.risk_band; as band) {
+          <span class="pill" [class]="'risk-' + band">risk {{ band }}</span>
+        }
+        <span class="pill" [class]="'st-' + c.status">{{ labels[c.status] }}</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Claim</h2>
+        <dl>
+          <dt>Claimed</dt>
+          <dd class="numeric">{{ c.claimed_amount | number: '1.2-2' }}</dd>
+          @if (c.settled_amount) {
+            <dt>Settled</dt>
+            <dd class="numeric">{{ c.settled_amount | number: '1.2-2' }}</dd>
+          }
+          <dt>Assigned</dt>
+          <dd>{{ c.assigned_adjuster_id ? 'Yes' : 'Unassigned' }}</dd>
+        </dl>
+        <p class="description">{{ c.description }}</p>
+      </section>
+
+      <section class="card">
+        <h2>Documents</h2>
+        @for (doc of documents(); track doc.id) {
+          <div class="doc">
+            <span class="doc-name">{{ doc.filename }}</span>
+            <span class="doc-meta">{{ doc.doc_type }} · {{ doc.processing_status }}</span>
+          </div>
+        } @empty {
+          <p class="muted">No documents uploaded.</p>
+        }
+      </section>
+    </div>
+
+    @if (assessment(); as a) {
+      <section class="card assessment">
+        <div class="assessment-head">
+          <h2>Assessment</h2>
+          <span class="model">{{ a.model_version }} · prompt v{{ a.prompt_version }} · {{ a.latency_ms }}ms</span>
+        </div>
+
+        <div class="verdict-row">
+          <div>
+            <span class="label">Coverage</span>
+            <span class="verdict" [class]="'v-' + a.coverage_verdict">{{ verdictLabels[a.coverage_verdict] }}</span>
+          </div>
+          <div>
+            <span class="label">Risk</span>
+            <span class="verdict" [class]="'risk-' + a.risk_band">{{ a.risk_score }} · {{ a.risk_band }}</span>
+          </div>
+          @if (a.recommended_amount) {
+            <div>
+              <span class="label">Recommended</span>
+              <span class="numeric strong">{{ a.recommended_amount | number: '1.2-2' }}</span>
+            </div>
+          }
+        </div>
+
+        <h3>Coverage rationale</h3>
+        <p class="rationale">
+          @for (part of segments(a.coverage_rationale); track $index) {
+            @if (part.citation; as cited) {
+              <button class="inline-cite" type="button" (click)="showSource(cited)">{{ part.text }}</button>
+            } @else {
+              <span>{{ part.text }}</span>
+            }
+          }
+        </p>
+        @if (coverageCitations().length) {
+          <ul class="citations">
+            @for (citation of coverageCitations(); track citation.id) {
+              <li>
+                <button type="button" (click)="showSource(citation)">{{ citation.source_ref }}</button>
+                @if (citation.quoted_span) {
+                  <span class="quote">“{{ citation.quoted_span }}”</span>
+                }
+              </li>
+            }
+          </ul>
+        }
+
+        <h3>Risk rationale</h3>
+        <p class="rationale">
+          @for (part of segments(a.risk_rationale); track $index) {
+            @if (part.citation; as cited) {
+              <button class="inline-cite" type="button" (click)="showSource(cited)">{{ part.text }}</button>
+            } @else {
+              <span>{{ part.text }}</span>
+            }
+          }
+        </p>
+        @if (riskCitations().length) {
+          <ul class="citations">
+            @for (citation of riskCitations(); track citation.id) {
+              <li>
+                <button type="button" (click)="showSource(citation)">{{ citation.source_ref }}</button>
+                @if (citation.quoted_span) {
+                  <span class="quote">“{{ citation.quoted_span }}”</span>
+                }
+              </li>
+            }
+          </ul>
+        }
+
+        @if (amountCitations().length) {
+          <h3>Settlement basis</h3>
+          <ul class="citations">
+            @for (citation of amountCitations(); track citation.id) {
+              <li>
+                <button type="button" (click)="showSource(citation)">{{ citation.source_ref }}</button>
+                @if (citation.quoted_span) {
+                  <span class="quote">“{{ citation.quoted_span }}”</span>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    } @else if (notAssessed()) {
+      <section class="card">
+        <h2>Assessment</h2>
+        <p class="muted">
+          Not assessed. This claim can still be worked manually — the assessment is advisory.
+        </p>
+      </section>
+    }
+
+    <section class="card">
+      <h2>Actions</h2>
+      @if (c.available_transitions.length === 0) {
+        <p class="muted">No actions available to you for this claim.</p>
+      } @else {
+        <div class="action-inputs">
+          <label>
+            <span>Settlement amount</span>
+            <input
+              type="text"
+              inputmode="decimal"
+              [value]="settlementAmount()"
+              (input)="settlementAmount.set($any($event.target).value)"
+              placeholder="e.g. 108450.00"
+            />
+          </label>
+          <label class="grow">
+            <span>Reason</span>
+            <input
+              type="text"
+              [value]="reason()"
+              (input)="reason.set($any($event.target).value)"
+              placeholder="Optional note for the audit trail"
+            />
+          </label>
+        </div>
+
+        <p class="authority">Your authority limit: {{ authorityLimit() | number: '1.2-2' }}</p>
+
+        @if (actionError(); as message) {
+          <p class="error" role="alert">{{ message }}</p>
+        }
+
+        <div class="actions">
+          @for (target of c.available_transitions; track target) {
+            <button type="button" [disabled]="working()" (click)="act(target)">
+              {{ labels[target] }}
+            </button>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="card">
+      <h2>History</h2>
+      <ol class="history">
+        @for (entry of history(); track entry.created_at) {
+          <li>
+            <span class="time">{{ entry.created_at | slice: 0 : 19 }}</span>
+            <span class="move">
+              {{ entry.from_status ?? 'created' }} → <strong>{{ entry.to_status }}</strong>
+            </span>
+            <span class="actor">{{ entry.actor_type }}</span>
+            @if (entry.reason) {
+              <span class="reason">{{ entry.reason }}</span>
+            }
+          </li>
+        }
+      </ol>
+    </section>
+  }
+
+  @if (openSource(); as source) {
+    <div class="overlay" (click)="closeSource()">
+      <div class="panel" (click)="$event.stopPropagation()">
+        <header>
+          <h3>{{ source.source_ref }}</h3>
+          <button type="button" (click)="closeSource()">Close</button>
+        </header>
+        <pre>{{ source.body }}</pre>
+      </div>
+    </div>
+  }
+</main>

@@ -76,7 +76,11 @@ export class ClaimStreamService {
       try {
         const event = JSON.parse(message.data) as ClaimEvent;
         this._lastEvent.set(event);
-        this._events.update((all) => [event, ...all].slice(0, 50));
+        // The handshake ack is a connection signal, not a claim event. Keeping
+        // it out of the feed avoids a row with no claim and no timestamp.
+        if (event.type !== 'connected') {
+          this._events.update((all) => [event, ...all].slice(0, 50));
+        }
       } catch {
         // Ignore anything that isn't JSON rather than tearing down the socket.
       }

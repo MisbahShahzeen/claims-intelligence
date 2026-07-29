@@ -4,10 +4,11 @@ import { Router } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { ClaimStreamService } from '../../core/claim-stream.service';
+import { ClaimQueue } from '../claims/claim-queue';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [SlicePipe],
+  imports: [SlicePipe, ClaimQueue],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
