@@ -22,6 +22,7 @@ from sqlalchemy import text
 from app.core.config import get_settings
 from app.core.db import SessionLocal
 from app.services import claim_service
+from app.ws.manager import manager
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(name)s %(message)s")
 logger = logging.getLogger("claims-api.consumer")
@@ -99,6 +100,11 @@ class EventConsumer:
 
     async def _handle(self, raw: bytes) -> None:
         envelope = EventEnvelope.from_json(raw)
+
+        if envelope.event_type in {"claim.submitted", "claim.status_changed"}:
+            await self._broadcast(envelope)
+            return
+
         if envelope.event_type != "assessment.completed":
             return
 
@@ -137,6 +143,40 @@ class EventConsumer:
                     claim.status,
                     claim.risk_band,
                 )
+                pending = {
+                    "type": "claim.assessed",
+                    "claim_id": str(claim.id),
+                    "claim_number": claim.claim_number,
+                    "status": claim.status,
+                    "risk_band": claim.risk_band,
+                    "coverage_verdict": payload.get("coverage_verdict"),
+                    "risk_score": payload.get("risk_score"),
+                    "occurred_at": envelope.occurred_at.isoformat(),
+                }
+
+        delivered = await manager.broadcast(pending)
+        logger.info("broadcast claim.assessed to %d client(s)", delivered)
+
+
+    async def _broadcast(self, envelope: EventEnvelope) -> None:
+        payload = envelope.payload
+        message = {
+            "type": envelope.event_type,
+            "claim_id": payload.get("claim_id"),
+            "claim_number": payload.get("claim_number"),
+            "occurred_at": envelope.occurred_at.isoformat(),
+        }
+        if envelope.event_type == "claim.status_changed":
+            message["from_status"] = payload.get("from_status")
+            message["to_status"] = payload.get("to_status")
+        else:
+            message["status"] = payload.get("status")
+            message["claimed_amount"] = payload.get("claimed_amount")
+            message["loss_type"] = payload.get("loss_type")
+
+        delivered = await manager.broadcast(message)
+        if delivered:
+            logger.info("broadcast %s to %d client(s)", envelope.event_type, delivered)
 
 
 consumer = EventConsumer()

@@ -7,7 +7,7 @@ from sqlalchemy import text
 from app.core.config import get_settings
 from app.core.db import engine
 from app.events.consumer import consumer
-from app.routers import auth, claims, documents, users
+from app.routers import auth, claims, documents, stream, users
 
 settings = get_settings()
 
@@ -33,6 +33,7 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(claims.router)
 app.include_router(documents.router)
+app.include_router(stream.router)
 
 
 @app.get("/health/live")
