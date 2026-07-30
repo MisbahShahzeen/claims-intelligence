@@ -66,19 +66,24 @@ class Extractor:
         started = time.perf_counter()
         last_error = "unknown error"
         attempt = 1
+        # Accumulated across attempts so a retried call reports its full cost.
+        spent_input = 0
+        spent_output = 0
 
         while attempt <= settings.gemini_max_retries:
             try:
                 response = await asyncio.to_thread(self._call, data, mime_type, filename)
-                parsed = self._parse(response.text)
                 usage = response.usage_metadata
+                spent_input += getattr(usage, "prompt_token_count", 0) or 0
+                spent_output += getattr(usage, "candidates_token_count", 0) or 0
+                parsed = self._parse(response.text)
 
                 return ExtractionResult(
                     succeeded=True,
                     model=settings.gemini_model,
                     latency_ms=int((time.perf_counter() - started) * 1000),
-                    input_tokens=getattr(usage, "prompt_token_count", 0) or 0,
-                    output_tokens=getattr(usage, "candidates_token_count", 0) or 0,
+                    input_tokens=spent_input,
+                    output_tokens=spent_output,
                     extracted=parsed,
                     confidence=self._confidence(parsed),
                     attempts=attempt,
@@ -102,6 +107,8 @@ class Extractor:
             succeeded=False,
             model=settings.gemini_model,
             latency_ms=int((time.perf_counter() - started) * 1000),
+            input_tokens=spent_input,
+            output_tokens=spent_output,
             error=last_error,
             attempts=attempt,
         )

@@ -123,19 +123,28 @@ class Assessor:
         valid_ids |= {f"precedent:{hit.id}" for hit in evidence.precedents}
 
         last_error = "unknown error"
+        # Token counts are captured outside the try so a response that arrives
+        # and then fails validation still reports what it cost. A failed call is
+        # not a free call, and a cost dashboard that only counts successes
+        # understates spend precisely when spend is being wasted.
+        spent_input = 0
+        spent_output = 0
+
         for attempt in range(1, settings.max_retries + 1):
             try:
                 response = await asyncio.to_thread(self._call, prompt)
+                usage = response.usage_metadata
+                spent_input += getattr(usage, "prompt_token_count", 0) or 0
+                spent_output += getattr(usage, "candidates_token_count", 0) or 0
                 payload = self._parse(response.text)
                 self._validate(payload)
                 citations = self._filter_citations(payload.get("citations", []), valid_ids)
-                usage = response.usage_metadata
 
                 return AssessmentResult(
                     succeeded=True,
                     latency_ms=int((time.perf_counter() - started) * 1000),
-                    input_tokens=getattr(usage, "prompt_token_count", 0) or 0,
-                    output_tokens=getattr(usage, "candidates_token_count", 0) or 0,
+                    input_tokens=spent_input,
+                    output_tokens=spent_output,
                     payload=payload,
                     citations=citations,
                 )
@@ -156,6 +165,8 @@ class Assessor:
         return AssessmentResult(
             succeeded=False,
             latency_ms=int((time.perf_counter() - started) * 1000),
+            input_tokens=spent_input,
+            output_tokens=spent_output,
             error=last_error,
         )
 
