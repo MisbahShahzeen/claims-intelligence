@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: outbox-relay
-          image: outbox-relay:0.1.0
+          image: outbox-relay:0.1.1
           imagePullPolicy: IfNotPresent
           ports:
             - name: metrics
@@ -80,7 +80,7 @@ spec:
     spec:
       containers:
         - name: ingestion-worker
-          image: ingestion-worker:0.1.1
+          image: ingestion-worker:0.1.2
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
@@ -128,7 +128,7 @@ spec:
     spec:
       containers:
         - name: decision-worker
-          image: decision-worker:0.1.1
+          image: decision-worker:0.1.3
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:

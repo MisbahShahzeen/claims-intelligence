@@ -18,7 +18,7 @@ import uuid
 from pathlib import Path
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
-from claims_events import DocumentEvent, EventEnvelope, Topic
+from claims_events import DeadLetterReason, DocumentEvent, EventEnvelope, Topic, dead_letter
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
@@ -285,6 +285,22 @@ class IngestionWorker:
                         "envelope": outgoing.model_dump_json(),
                     },
                 )
+
+                # A failed extraction already emits document.extraction_failed,
+                # which nothing consumes. Also dead-lettering it means the
+                # failure is visible on a topic an operator monitors, rather
+                # than only in a database column nobody queries.
+                if not result.succeeded:
+                    letter = dead_letter.build(
+                        envelope,
+                        reason=DeadLetterReason.MODEL_FAILURE,
+                        error=result.error or "extraction failed",
+                        consumer_group=settings.consumer_group,
+                        attempts=result.attempts,
+                    )
+                    await session.execute(
+                        INSERT_OUTBOX, dead_letter.to_outbox_params(letter)
+                    )
 
 
 async def main() -> None:

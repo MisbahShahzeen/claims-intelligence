@@ -16,6 +16,7 @@ TOPICS: dict[str, int] = {
 }
 
 _AGGREGATE_TOPICS = {
+    "dead_letter": Topic.DEAD_LETTER,
     "claim": Topic.CLAIM,
     "document": Topic.DOCUMENT,
     "assessment": Topic.ASSESSMENT,
@@ -38,3 +39,17 @@ class DocumentEvent(StrEnum):
     UPLOADED = "document.uploaded"
     EXTRACTED = "document.extracted"
     EXTRACTION_FAILED = "document.extraction_failed"
+
+
+class DeadLetterReason(StrEnum):
+    """Why an event could not be processed.
+
+    Recorded on the dead-letter envelope so an operator can triage without
+    reading logs. The distinction that matters: a MODEL_FAILURE may become
+    processable if the model or prompt changes, while MALFORMED_EVENT and
+    MISSING_DATA will not.
+    """
+
+    MODEL_FAILURE = "model_failure"
+    MALFORMED_EVENT = "malformed_event"
+    MISSING_DATA = "missing_data"

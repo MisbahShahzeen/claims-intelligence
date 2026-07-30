@@ -14,7 +14,13 @@ import signal
 import uuid
 
 from aiokafka import AIOKafkaConsumer
-from claims_events import DocumentEvent, EventEnvelope, Topic
+from claims_events import (
+    DeadLetterReason,
+    DocumentEvent,
+    EventEnvelope,
+    Topic,
+    dead_letter,
+)
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from decider import queries
@@ -113,7 +119,19 @@ class DecisionWorker:
                     .one_or_none()
                 )
                 if context is None:
-                    logger.error("claim %s not found", claim_id)
+                    # The event references a claim that does not exist. No
+                    # retry will fix that, so it is dead-lettered rather than
+                    # dropped silently.
+                    logger.error("claim %s not found, dead-lettering", claim_id)
+                    letter = dead_letter.build(
+                        envelope,
+                        reason=DeadLetterReason.MISSING_DATA,
+                        error=f"claim {claim_id} not found",
+                        consumer_group=settings.consumer_group,
+                    )
+                    await session.execute(
+                        queries.INSERT_OUTBOX, dead_letter.to_outbox_params(letter)
+                    )
                     return
 
                 claim = {k: str(v) for k, v in dict(context).items()}
@@ -161,7 +179,22 @@ class DecisionWorker:
                     logger.error(
                         "assessment failed for %s: %s", claim["claim_number"], result.error
                     )
-                    raise RuntimeError(result.error or "assessment failed")
+                    # The assessor has already exhausted its own retries with
+                    # backoff, and it only retries transient errors. Reaching
+                    # here means trying again will not help, so the event goes
+                    # to the dead-letter topic and the offset commits. Retrying
+                    # forever would block this partition and stop every later
+                    # claim from being assessed.
+                    letter = dead_letter.build(
+                        envelope,
+                        reason=DeadLetterReason.MODEL_FAILURE,
+                        error=result.error or "assessment failed",
+                        consumer_group=settings.consumer_group,
+                    )
+                    await session.execute(
+                        queries.INSERT_OUTBOX, dead_letter.to_outbox_params(letter)
+                    )
+                    return
 
                 payload = result.payload or {}
                 assessment_id = await session.scalar(
