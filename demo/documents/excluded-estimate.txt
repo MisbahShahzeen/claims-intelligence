@@ -1,0 +1,24 @@
+PRECISION MOTORS BODY SHOP
+Bommanahalli, Bengaluru 560068
+GSTIN: 29AAFCP2281L1ZQ
+
+REPAIR ESTIMATE
+Estimate No: PM-2026-0741
+Date: 28 July 2026
+
+Vehicle: KA-05-MJ-4471 (Maruti Suzuki Baleno)
+Presented by: Rohan Mehta
+
+Parts:
+  Front bumper assembly (plastic)  Rs  22,800
+  Bonnet panel (metal)             Rs  38,400
+  Radiator and condenser           Rs  46,200
+  Front suspension, both sides     Rs  71,500
+  Headlamp assemblies, pair        Rs  34,000
+Labour:
+  Structural realignment           Rs  38,000
+  Paint and finishing              Rs  27,500
+
+Subtotal                           Rs 278,400
+GST at 18 percent                  Rs  50,112
+TOTAL PAYABLE                      Rs 328,512
