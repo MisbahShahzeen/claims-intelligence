@@ -68,9 +68,7 @@ async def test_submit_requires_authentication(client: AsyncClient, policy: Polic
     assert (await client.post("/claims", json=FNOL)).status_code == 401
 
 
-async def test_unknown_policy_is_rejected(
-    client: AsyncClient, adjuster: User, auth_header
-):
+async def test_unknown_policy_is_rejected(client: AsyncClient, adjuster: User, auth_header):
     response = await client.post(
         "/claims", headers=auth_header(adjuster), json={**FNOL, "policy_number": "NOPE-1"}
     )
@@ -90,9 +88,7 @@ async def test_submission_writes_history(
     client: AsyncClient, policy: Policy, adjuster: User, auth_header
 ):
     claim = await submit(client, auth_header(adjuster))
-    response = await client.get(
-        f"/claims/{claim['id']}/history", headers=auth_header(adjuster)
-    )
+    response = await client.get(f"/claims/{claim['id']}/history", headers=auth_header(adjuster))
 
     entries = response.json()
     assert len(entries) == 1
@@ -129,9 +125,7 @@ async def test_approval_above_authority_returns_403(
     claim = await submit(client, headers)
     await move(client, headers, claim["id"], "under_review")
 
-    response = await move(
-        client, headers, claim["id"], "approved", settlement_amount="60000.00"
-    )
+    response = await move(client, headers, claim["id"], "approved", settlement_amount="60000.00")
 
     assert response.status_code == 403
     assert "authority limit" in response.json()["detail"]
@@ -154,9 +148,7 @@ async def test_adjuster_approves_within_authority(
     claim = await submit(client, headers)
     await move(client, headers, claim["id"], "under_review")
 
-    response = await move(
-        client, headers, claim["id"], "approved", settlement_amount="40000.00"
-    )
+    response = await move(client, headers, claim["id"], "approved", settlement_amount="40000.00")
 
     assert response.status_code == 200
     assert response.json()["status"] == "approved"
@@ -169,13 +161,9 @@ async def test_four_eyes_blocks_self_approval(
     headers = auth_header(senior)
     claim = await submit(client, headers)
     await move(client, headers, claim["id"], "under_review")
-    await move(
-        client, headers, claim["id"], "pending_approval", settlement_amount="90000.00"
-    )
+    await move(client, headers, claim["id"], "pending_approval", settlement_amount="90000.00")
 
-    response = await move(
-        client, headers, claim["id"], "approved", settlement_amount="90000.00"
-    )
+    response = await move(client, headers, claim["id"], "approved", settlement_amount="90000.00")
 
     assert response.status_code == 403
     assert "other than" in response.json()["detail"]
@@ -211,9 +199,7 @@ async def test_full_lifecycle_history_is_ordered(
     await move(client, headers, claim["id"], "approved", settlement_amount="30000.00")
     await move(client, headers, claim["id"], "settled")
 
-    entries = (
-        await client.get(f"/claims/{claim['id']}/history", headers=headers)
-    ).json()
+    entries = (await client.get(f"/claims/{claim['id']}/history", headers=headers)).json()
 
     assert [entry["to_status"] for entry in entries] == [
         "submitted",
@@ -232,20 +218,18 @@ async def test_available_transitions_reflect_role(
     await move(client, headers, claim["id"], "approved", settlement_amount="30000.00")
     await move(client, headers, claim["id"], "settled")
 
-    as_adjuster = (
-        await client.get(f"/claims/{claim['id']}", headers=headers)
-    ).json()["available_transitions"]
-    as_senior = (
-        await client.get(f"/claims/{claim['id']}", headers=auth_header(senior))
-    ).json()["available_transitions"]
+    as_adjuster = (await client.get(f"/claims/{claim['id']}", headers=headers)).json()[
+        "available_transitions"
+    ]
+    as_senior = (await client.get(f"/claims/{claim['id']}", headers=auth_header(senior))).json()[
+        "available_transitions"
+    ]
 
     assert as_adjuster == []
     assert as_senior == ["under_review"]
 
 
-async def test_missing_claim_returns_404(
-    client: AsyncClient, adjuster: User, auth_header
-):
+async def test_missing_claim_returns_404(client: AsyncClient, adjuster: User, auth_header):
     missing = "00000000-0000-0000-0000-000000000000"
     response = await client.get(f"/claims/{missing}", headers=auth_header(adjuster))
     assert response.status_code == 404
@@ -259,12 +243,8 @@ async def test_list_filters_by_status(
     await submit(client, headers)
     await move(client, headers, first["id"], "under_review")
 
-    submitted = (
-        await client.get("/claims?status=submitted", headers=headers)
-    ).json()
-    under_review = (
-        await client.get("/claims?status=under_review", headers=headers)
-    ).json()
+    submitted = (await client.get("/claims?status=submitted", headers=headers)).json()
+    under_review = (await client.get("/claims?status=under_review", headers=headers)).json()
 
     assert submitted["total"] == 1
     assert under_review["total"] == 1

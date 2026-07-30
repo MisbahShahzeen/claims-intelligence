@@ -60,9 +60,7 @@ INSERT_PRECEDENT = text("""
          :outcome, :claimed_amount, :settled_amount, :fraud_flag, :risk_band, :embedding)
 """)
 
-PRECEDENT_EXISTS = text(
-    "SELECT 1 FROM ai.claim_precedents WHERE content_hash = :content_hash"
-)
+PRECEDENT_EXISTS = text("SELECT 1 FROM ai.claim_precedents WHERE content_hash = :content_hash")
 
 
 def parse_wording(markdown: str) -> tuple[str, list[dict]]:
@@ -106,9 +104,7 @@ async def seed_wording(session, embedder: Embedder, path: Path, product_type: st
 
     pending = []
     for chunk in chunks:
-        exists = await session.execute(
-            CHUNK_EXISTS, {"content_hash": chunk["content_hash"]}
-        )
+        exists = await session.execute(CHUNK_EXISTS, {"content_hash": chunk["content_hash"]})
         if exists.scalar_one_or_none() is None:
             pending.append(chunk)
 
@@ -149,8 +145,9 @@ async def seed_wording(session, embedder: Embedder, path: Path, product_type: st
         )
 
     exclusions = sum(1 for c in pending if c["is_exclusion"])
-    logger.info("%s: indexed %d clause(s), %d flagged as exclusions",
-                path.name, len(pending), exclusions)
+    logger.info(
+        "%s: indexed %d clause(s), %d flagged as exclusions", path.name, len(pending), exclusions
+    )
 
 
 async def seed_precedents(session, embedder: Embedder) -> None:

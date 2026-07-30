@@ -6,11 +6,11 @@ from claims_events import ClaimEvent
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import metrics
+from app.events import record_event
 from app.models.claim import Claim, ClaimStatus
 from app.models.claim_status_history import ActorType, ClaimStatusHistory
 from app.models.policy import Policy, PolicyStatus
-from app.core import metrics
-from app.events import record_event
 from app.models.user import User
 from app.schemas.claim import ClaimCreate
 from app.services.claim_state_machine import (
@@ -113,15 +113,9 @@ async def list_claims(
     if assigned_adjuster_id is not None:
         filters.append(Claim.assigned_adjuster_id == assigned_adjuster_id)
 
-    total = await session.scalar(
-        select(func.count()).select_from(Claim).where(*filters)
-    )
+    total = await session.scalar(select(func.count()).select_from(Claim).where(*filters))
     result = await session.execute(
-        select(Claim)
-        .where(*filters)
-        .order_by(Claim.created_at.desc())
-        .limit(limit)
-        .offset(offset)
+        select(Claim).where(*filters).order_by(Claim.created_at.desc()).limit(limit).offset(offset)
     )
     return list(result.scalars()), int(total or 0)
 

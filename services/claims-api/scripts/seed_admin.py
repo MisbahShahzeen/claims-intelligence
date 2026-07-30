@@ -3,9 +3,9 @@ import os
 from decimal import Decimal
 
 from app.core.db import SessionLocal
+from app.models.user import UserRole
 from app.schemas.user import UserCreate
 from app.services import user_service
-from app.models.user import UserRole
 
 
 async def main() -> None:

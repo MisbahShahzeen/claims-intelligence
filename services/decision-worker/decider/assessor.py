@@ -148,8 +148,9 @@ class Assessor:
                 if not retriable or attempt == settings.max_retries:
                     break
                 delay = min(2**attempt, 30) + random.uniform(0, 1)
-                logger.warning("assess attempt %d failed (%s), retrying in %.1fs",
-                               attempt, last_error, delay)
+                logger.warning(
+                    "assess attempt %d failed (%s), retrying in %.1fs", attempt, last_error, delay
+                )
                 await asyncio.sleep(delay)
 
         return AssessmentResult(
@@ -171,18 +172,18 @@ class Assessor:
         )
         return f"""## CLAIM RECORD
 
-Claim number: {claim['claim_number']}
-Product: {claim['product_type']}
-Loss type: {claim['loss_type']}
-Date of loss: {claim['loss_date']}
-Reported: {claim['reported_date']}
-Amount claimed: {claim['claimed_amount']}
-Policy period: {claim['effective_from']} to {claim['effective_to']}
-Policy coverage limit: {claim['coverage_limit']}
-Policy deductible: {claim['deductible']}
+Claim number: {claim["claim_number"]}
+Product: {claim["product_type"]}
+Loss type: {claim["loss_type"]}
+Date of loss: {claim["loss_date"]}
+Reported: {claim["reported_date"]}
+Amount claimed: {claim["claimed_amount"]}
+Policy period: {claim["effective_from"]} to {claim["effective_to"]}
+Policy coverage limit: {claim["coverage_limit"]}
+Policy deductible: {claim["deductible"]}
 
 Description as reported:
-{claim['description']}
+{claim["description"]}
 
 ## EXTRACTED DOCUMENT DATA
 
@@ -219,7 +220,7 @@ Assess coverage and risk for this claim. Cite only the ids given above."""
         cleaned = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```")
         try:
             return json.loads(cleaned)
-        except json.JSONDecodeError as error:
+        except json.JSONDecodeError:
             logger.error(
                 "unparseable response (%d chars), tail: %r",
                 len(cleaned),

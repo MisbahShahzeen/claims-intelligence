@@ -157,7 +157,6 @@ class EventConsumer:
         delivered = await manager.broadcast(pending)
         logger.info("broadcast claim.assessed to %d client(s)", delivered)
 
-
     async def _broadcast(self, envelope: EventEnvelope) -> None:
         payload = envelope.payload
         message = {

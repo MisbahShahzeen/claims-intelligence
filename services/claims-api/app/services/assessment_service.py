@@ -38,15 +38,19 @@ PRECEDENT_BODY = text("""
 
 async def latest_for_claim(session: AsyncSession, claim_id: uuid.UUID) -> dict | None:
     row = (
-        await session.execute(LATEST_ASSESSMENT, {"claim_id": str(claim_id)})
-    ).mappings().one_or_none()
+        (await session.execute(LATEST_ASSESSMENT, {"claim_id": str(claim_id)}))
+        .mappings()
+        .one_or_none()
+    )
     if row is None:
         return None
 
     assessment = dict(row)
     citations = (
-        await session.execute(CITATIONS, {"assessment_id": str(assessment["id"])})
-    ).mappings().all()
+        (await session.execute(CITATIONS, {"assessment_id": str(assessment["id"])}))
+        .mappings()
+        .all()
+    )
     assessment["citations"] = [dict(citation) for citation in citations]
     return assessment
 
@@ -62,8 +66,10 @@ async def source_detail(
     """
     if source_type == "policy_chunk":
         row = (
-            await session.execute(CLAUSE_BODY, {"source_id": str(source_id)})
-        ).mappings().one_or_none()
+            (await session.execute(CLAUSE_BODY, {"source_id": str(source_id)}))
+            .mappings()
+            .one_or_none()
+        )
         if row is None:
             return None
         return {
@@ -79,8 +85,10 @@ async def source_detail(
 
     if source_type == "precedent":
         row = (
-            await session.execute(PRECEDENT_BODY, {"source_id": str(source_id)})
-        ).mappings().one_or_none()
+            (await session.execute(PRECEDENT_BODY, {"source_id": str(source_id)}))
+            .mappings()
+            .one_or_none()
+        )
         if row is None:
             return None
         return {

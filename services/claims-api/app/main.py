@@ -2,16 +2,16 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 from sqlalchemy import text
 
 from app.core.config import get_settings
 from app.core.db import engine
-from prometheus_fastapi_instrumentator import Instrumentator
-
 from app.events.consumer import consumer
 from app.routers import assessments, auth, claims, documents, stream, users
 
 settings = get_settings()
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):

@@ -1,0 +1,176 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install ruff
+        run: pip install ruff
+
+      # Lint runs as its own job, not as a step inside the test job. It is fast
+      # and needs no services, so a formatting error fails in seconds instead of
+      # waiting for Postgres and Kafka to come up.
+      - name: Check formatting and lint
+        run: |
+          ruff check --config ruff.toml services/ shared/
+          ruff format --check --config ruff.toml services/ shared/
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        # pgvector image, not plain postgres: the migrations create the vector
+        # extension and would fail on a stock image.
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: claims
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      # Extensions and schemas normally come from the compose init script, which
+      # does not run here. Applied explicitly so the migrations have somewhere
+      # to build.
+      - name: Prepare database
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d claims -f infra/postgres/init/01-extensions.sql
+
+      - name: Install dependencies
+        working-directory: services/claims-api
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run migrations
+        working-directory: services/claims-api
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/claims
+          JWT_SECRET_KEY: ci-only-secret-value-not-used-in-any-deployment
+        run: alembic upgrade head
+
+      # The suite builds its own claims_test database from the migrations, so
+      # this proves the migration chain applies cleanly from empty as well as
+      # that the code works.
+      - name: Run tests
+        working-directory: services/claims-api
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/claims
+          JWT_SECRET_KEY: ci-only-secret-value-not-used-in-any-deployment
+          KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+        run: pytest -q --tb=short
+
+  build:
+    name: Build images
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+
+    strategy:
+      # All four build in parallel, and fail-fast is off so one broken
+      # Dockerfile does not hide problems in the others.
+      fail-fast: false
+      matrix:
+        service:
+          - claims-api
+          - outbox-relay
+          - ingestion-worker
+          - decision-worker
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.service }}
+        uses: docker/build-push-action@v6
+        with:
+          # Repo root as context: the Dockerfiles COPY shared/ for the local
+          # events package.
+          context: .
+          file: services/${{ matrix.service }}/Dockerfile
+          # Not pushed. Publishing needs registry credentials, and a portfolio
+          # project has nowhere to deploy to. The build is the check that
+          # matters: it proves the image assembles from a clean checkout.
+          push: false
+          tags: ${{ matrix.service }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/claims-dashboard/package-lock.json
+
+      - name: Install
+        working-directory: frontend/claims-dashboard
+        run: npm ci
+
+      - name: Build
+        working-directory: frontend/claims-dashboard
+        run: npm run build
+
+  manifests:
+    name: Validate Kubernetes manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install kubeconform
+        run: |
+          curl -sSL -o kubeconform.tar.gz \
+            https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
+          tar xzf kubeconform.tar.gz
+          sudo mv kubeconform /usr/local/bin/
+
+      - name: Validate against the Kubernetes schema
+        run: kubeconform -summary -strict infra/k8s/
+
+      # A :latest tag makes rollouts accidental and rollbacks impossible. This
+      # is enforced rather than remembered.
+      - name: Reject :latest image tags
+        run: |
+          if grep -rn "image:.*:latest" infra/k8s/; then
+            echo "::error::Pinned image tags are required in Kubernetes manifests"
+            exit 1
+          fi
+          echo "No :latest tags found"

@@ -23,7 +23,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from worker.config import get_settings
-from worker.extractor import Extractor, ExtractionResult
+from worker.extractor import ExtractionResult, Extractor
 
 logging.basicConfig(
     level=logging.INFO,
@@ -202,8 +202,13 @@ class IngestionWorker:
         extracted = result.extracted or {}
         doc_type = extracted.get("doc_type", "unknown")
         if doc_type not in {
-            "police_report", "invoice", "medical_bill",
-            "repair_estimate", "photo", "other", "unknown",
+            "police_report",
+            "invoice",
+            "medical_bill",
+            "repair_estimate",
+            "photo",
+            "other",
+            "unknown",
         }:
             doc_type = "other"
 

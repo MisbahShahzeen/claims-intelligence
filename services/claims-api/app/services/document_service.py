@@ -24,9 +24,7 @@ class DocumentError(Exception):
 
 async def list_for_claim(session: AsyncSession, claim_id: uuid.UUID) -> list[Document]:
     result = await session.execute(
-        select(Document)
-        .where(Document.claim_id == claim_id)
-        .order_by(Document.created_at.asc())
+        select(Document).where(Document.claim_id == claim_id).order_by(Document.created_at.asc())
     )
     return list(result.scalars())
 
@@ -53,9 +51,7 @@ async def upload(
     digest = storage.content_hash(data)
 
     existing = await session.execute(
-        select(Document).where(
-            Document.claim_id == claim.id, Document.content_hash == digest
-        )
+        select(Document).where(Document.claim_id == claim.id, Document.content_hash == digest)
     )
     duplicate = existing.scalar_one_or_none()
     if duplicate is not None:

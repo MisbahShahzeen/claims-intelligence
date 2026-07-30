@@ -259,6 +259,4 @@ def test_available_transitions_hides_senior_only_moves_from_adjuster():
 
 
 def test_available_transitions_excludes_system_moves():
-    assert ClaimStatus.TRIAGED not in available_transitions(
-        ClaimStatus.SUBMITTED, UserRole.ADMIN
-    )
+    assert ClaimStatus.TRIAGED not in available_transitions(ClaimStatus.SUBMITTED, UserRole.ADMIN)

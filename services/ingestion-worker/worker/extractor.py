@@ -87,7 +87,7 @@ class Extractor:
                 last_error = f"{type(error).__name__}: {error}"
                 if not self._is_retriable(error) or attempt == settings.gemini_max_retries:
                     break
-                delay = min(2 ** attempt, 30) + random.uniform(0, 1)
+                delay = min(2**attempt, 30) + random.uniform(0, 1)
                 logger.warning(
                     "attempt %d/%d failed (%s), retrying in %.1fs",
                     attempt,

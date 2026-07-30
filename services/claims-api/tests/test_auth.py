@@ -45,9 +45,7 @@ async def test_me_returns_current_user(client: AsyncClient, adjuster: User, auth
     assert response.json()["authority_limit"] == "50000.00"
 
 
-async def test_inactive_user_is_rejected(
-    client: AsyncClient, session, adjuster: User, auth_header
-):
+async def test_inactive_user_is_rejected(client: AsyncClient, session, adjuster: User, auth_header):
     adjuster.is_active = False
     await session.commit()
 

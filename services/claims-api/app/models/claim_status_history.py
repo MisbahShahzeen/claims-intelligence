@@ -33,11 +33,7 @@ class ClaimStatusHistory(Base):
     claim_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("claims.claims.id"))
     from_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
     to_status: Mapped[str] = mapped_column(String(32))
-    actor_id: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("claims.users.id"), nullable=True
-    )
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("claims.users.id"), nullable=True)
     actor_type: Mapped[str] = mapped_column(String(16))
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

@@ -48,9 +48,7 @@ class PolicyDocument(Base):
     title: Mapped[str] = mapped_column(String(255))
     version: Mapped[int] = mapped_column(Integer, server_default="1")
     effective_from: Mapped[date] = mapped_column(Date)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class PolicyChunk(Base):
@@ -66,9 +64,7 @@ class PolicyChunk(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
     )
-    policy_document_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("ai.policy_documents.id")
-    )
+    policy_document_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ai.policy_documents.id"))
     section_ref: Mapped[str] = mapped_column(String(64))
     heading: Mapped[str | None] = mapped_column(String(255), nullable=True)
     clause_text: Mapped[str] = mapped_column(Text)
@@ -76,9 +72,7 @@ class PolicyChunk(Base):
     is_exclusion: Mapped[bool] = mapped_column(Boolean, server_default="false")
     ordinal: Mapped[int] = mapped_column(Integer, server_default="0")
     embedding: Mapped[list[float]] = mapped_column(Vector(EMBEDDING_DIMENSIONS))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class ClaimPrecedent(Base):
@@ -86,9 +80,7 @@ class ClaimPrecedent(Base):
 
     __tablename__ = "claim_precedents"
     __table_args__ = (
-        CheckConstraint(
-            "risk_band IN ('low', 'medium', 'high')", name="ck_precedents_risk_band"
-        ),
+        CheckConstraint("risk_band IN ('low', 'medium', 'high')", name="ck_precedents_risk_band"),
         Index("ix_claim_precedents_content_hash", "content_hash"),
         {"schema": "ai"},
     )
@@ -108,9 +100,7 @@ class ClaimPrecedent(Base):
     fraud_flag: Mapped[bool] = mapped_column(Boolean, server_default="false")
     risk_band: Mapped[str] = mapped_column(String(16))
     embedding: Mapped[list[float]] = mapped_column(Vector(EMBEDDING_DIMENSIONS))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class EmbeddingCache(Base):
@@ -126,6 +116,4 @@ class EmbeddingCache(Base):
     content_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
     model: Mapped[str] = mapped_column(String(64), primary_key=True)
     embedding: Mapped[list[float]] = mapped_column(Vector(EMBEDDING_DIMENSIONS))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

@@ -68,9 +68,7 @@ class Document(Base):
     processing_status: Mapped[str] = mapped_column(String(32), server_default="uploaded")
 
     uploaded_by_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
@@ -95,9 +93,7 @@ class Extraction(Base):
     confidence: Mapped[float | None] = mapped_column(Numeric(4, 3), nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class AiUsage(Base):
@@ -123,6 +119,4 @@ class AiUsage(Base):
     latency_ms: Mapped[int] = mapped_column(Integer, server_default="0")
     cache_hit: Mapped[bool] = mapped_column(server_default="false")
     succeeded: Mapped[bool] = mapped_column(server_default="true")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

@@ -9,18 +9,18 @@ from app.models.knowledge import (
     PolicyDocument,
 )
 from app.models.outbox import OutboxEvent, ProcessedEvent
-from app.models.rate_limit import RateLimitBucket
 from app.models.policy import Policy, PolicyStatus, ProductType
+from app.models.rate_limit import RateLimitBucket
 from app.models.user import User, UserRole
 
 __all__ = [
     "ActorType",
+    "AiUsage",
     "Assessment",
     "AssessmentCitation",
-    "AiUsage",
     "Claim",
-    "ClaimStatus",
     "ClaimPrecedent",
+    "ClaimStatus",
     "ClaimStatusHistory",
     "Document",
     "DocumentType",
@@ -32,8 +32,8 @@ __all__ = [
     "PolicyChunk",
     "PolicyDocument",
     "PolicyStatus",
-    "ProcessingStatus",
     "ProcessedEvent",
+    "ProcessingStatus",
     "ProductType",
     "RateLimitBucket",
     "RiskBand",

@@ -133,9 +133,7 @@ TRANSITIONS: dict[ClaimStatus, dict[ClaimStatus, Transition]] = {
     ClaimStatus.WITHDRAWN: {},
 }
 
-TERMINAL_STATUSES = frozenset(
-    status for status, moves in TRANSITIONS.items() if not moves
-)
+TERMINAL_STATUSES = frozenset(status for status, moves in TRANSITIONS.items() if not moves)
 
 
 def evaluate(request: TransitionRequest) -> TransitionResult:
@@ -159,12 +157,13 @@ def evaluate(request: TransitionRequest) -> TransitionResult:
             "This transition requires a user actor",
         )
 
-    if not request.is_system:
-        if request.actor_role is None or request.actor_role not in transition.allowed_roles:
-            return TransitionResult(
-                TransitionOutcome.FORBIDDEN,
-                "Your role is not permitted to perform this transition",
-            )
+    if not request.is_system and (
+        request.actor_role is None or request.actor_role not in transition.allowed_roles
+    ):
+        return TransitionResult(
+            TransitionOutcome.FORBIDDEN,
+            "Your role is not permitted to perform this transition",
+        )
 
     for guard in transition.guards:
         failure = guard.check(request)

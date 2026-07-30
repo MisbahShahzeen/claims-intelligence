@@ -48,9 +48,7 @@ async def consume(
     session: AsyncSession, key: str, *, limit: int, window_seconds: int
 ) -> RateLimitResult:
     row = (
-        await session.execute(
-            CONSUME, {"key": key[:128], "window_seconds": window_seconds}
-        )
+        await session.execute(CONSUME, {"key": key[:128], "window_seconds": window_seconds})
     ).one()
     await session.commit()
 

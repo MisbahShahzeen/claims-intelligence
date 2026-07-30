@@ -43,8 +43,12 @@ async def test_duplicate_email_is_rejected(client: AsyncClient, admin: User, aut
         "role": "adjuster",
     }
 
-    assert (await client.post("/users", headers=auth_header(admin), json=payload)).status_code == 201
-    assert (await client.post("/users", headers=auth_header(admin), json=payload)).status_code == 409
+    assert (
+        await client.post("/users", headers=auth_header(admin), json=payload)
+    ).status_code == 201
+    assert (
+        await client.post("/users", headers=auth_header(admin), json=payload)
+    ).status_code == 409
 
 
 async def test_short_password_is_rejected(client: AsyncClient, admin: User, auth_header):

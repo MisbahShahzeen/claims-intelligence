@@ -103,8 +103,13 @@ def collect(conn: psycopg.Connection) -> None:
         # that stops appearing in the data keeps reporting its last value
         # forever - a model you stopped using would look permanently active.
         for gauge in (
-            ai_cost_usd, ai_calls, ai_tokens, ai_latency_seconds,
-            claims_by_status, claims_by_risk, documents_by_status,
+            ai_cost_usd,
+            ai_calls,
+            ai_tokens,
+            ai_latency_seconds,
+            claims_by_status,
+            claims_by_risk,
+            documents_by_status,
             assessments_by_verdict,
         ):
             gauge.clear()

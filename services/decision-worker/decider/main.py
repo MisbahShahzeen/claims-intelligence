@@ -9,7 +9,6 @@ what it found; the service that owns the claim decides what to do about it.
 """
 
 import asyncio
-import json
 import logging
 import signal
 import uuid
@@ -109,8 +108,10 @@ class DecisionWorker:
                     return
 
                 context = (
-                    await session.execute(queries.CLAIM_CONTEXT, {"claim_id": str(claim_id)})
-                ).mappings().one_or_none()
+                    (await session.execute(queries.CLAIM_CONTEXT, {"claim_id": str(claim_id)}))
+                    .mappings()
+                    .one_or_none()
+                )
                 if context is None:
                     logger.error("claim %s not found", claim_id)
                     return
@@ -157,8 +158,9 @@ class DecisionWorker:
                 )
 
                 if not result.succeeded:
-                    logger.error("assessment failed for %s: %s",
-                                 claim["claim_number"], result.error)
+                    logger.error(
+                        "assessment failed for %s: %s", claim["claim_number"], result.error
+                    )
                     raise RuntimeError(result.error or "assessment failed")
 
                 payload = result.payload or {}
@@ -190,7 +192,9 @@ class DecisionWorker:
                         queries.INSERT_CITATION,
                         {
                             "assessment_id": str(assessment_id),
-                            "source_type": "policy_chunk" if source_type == "clause" else "precedent",
+                            "source_type": "policy_chunk"
+                            if source_type == "clause"
+                            else "precedent",
                             "source_id": source_id,
                             "source_ref": refs.get(source, source)[:128],
                             "relevance": citation.get("relevance"),

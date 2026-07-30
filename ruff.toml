@@ -1,0 +1,50 @@
+# Repo-wide lint config.
+#
+# The rule set is chosen, not defaulted. Ruff's defaults flag several patterns
+# this project uses deliberately - notably BLE001 (blind except), which is
+# exactly right for a long-running Kafka consumer where one malformed message
+# must not kill the process.
+
+target-version = "py312"
+line-length = 100
+
+exclude = [
+    ".venv",
+    "alembic/versions",  # generated, and edited by hand where autogenerate is wrong
+    "node_modules",
+]
+
+[lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes: undefined names, unused imports
+    "I",    # import sorting
+    "UP",   # pyupgrade: outdated syntax
+    "B",    # bugbear: likely bugs
+    "C4",   # comprehension simplifications
+    "SIM",  # simplifications
+    "RUF",  # ruff-specific
+]
+
+ignore = [
+    "E501",    # line length handled by the formatter
+    "B008",    # function call in default arg: this is how FastAPI Depends works
+    "SIM105",  # contextlib.suppress is not clearer than try/except/pass here
+    # Session lifecycle and transaction boundary are separate concerns. The
+    # nesting of `async with sessions()` inside `async with session.begin()`
+    # makes the transaction scope visible at a glance, which is the whole point
+    # of an auditable outbox. Collapsing them saves a line and costs clarity.
+    "SIM117",
+]
+
+[lint.per-file-ignores]
+# SQLAlchemy declarative models: mapped_column() is a column definition, not a
+# mutable default that instances would share.
+"**/models/*.py" = ["RUF012"]
+# Tests assert on behaviour, so unused fixture arguments are load-bearing:
+# requesting `policy` creates the row the test depends on.
+"tests/*" = ["ARG001", "F811"]
+
+[format]
+quote-style = "double"
+indent-style = "space"

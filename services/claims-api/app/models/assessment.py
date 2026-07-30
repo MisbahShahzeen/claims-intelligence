@@ -42,9 +42,7 @@ class Assessment(Base):
     __tablename__ = "assessments"
     __table_args__ = (
         CheckConstraint(f"coverage_verdict IN ({_VERDICTS})", name="ck_assessments_verdict"),
-        CheckConstraint(
-            "risk_band IN ('low', 'medium', 'high')", name="ck_assessments_risk_band"
-        ),
+        CheckConstraint("risk_band IN ('low', 'medium', 'high')", name="ck_assessments_risk_band"),
         CheckConstraint("risk_score >= 0 AND risk_score <= 100", name="ck_assessments_risk_score"),
         Index("ix_assessments_claim_id", "claim_id"),
         Index("ix_assessments_created_at", "created_at"),
@@ -69,9 +67,7 @@ class Assessment(Base):
     output_tokens: Mapped[int] = mapped_column(Integer, server_default="0")
     latency_ms: Mapped[int] = mapped_column(Integer, server_default="0")
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class AssessmentCitation(Base):
@@ -94,6 +90,4 @@ class AssessmentCitation(Base):
     relevance: Mapped[float | None] = mapped_column(Numeric(5, 4), nullable=True)
     quoted_span: Mapped[str | None] = mapped_column(Text, nullable=True)
     supports: Mapped[str] = mapped_column(String(32), server_default="coverage")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

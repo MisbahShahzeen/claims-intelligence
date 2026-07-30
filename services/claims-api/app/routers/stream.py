@@ -28,10 +28,8 @@ AUTH_TIMEOUT_SECONDS = 5.0
 
 async def _authenticate(websocket: WebSocket, session: AsyncSession) -> Connection | None:
     try:
-        payload = await asyncio.wait_for(
-            websocket.receive_json(), timeout=AUTH_TIMEOUT_SECONDS
-        )
-    except (TimeoutError, asyncio.TimeoutError):
+        payload = await asyncio.wait_for(websocket.receive_json(), timeout=AUTH_TIMEOUT_SECONDS)
+    except TimeoutError:
         await websocket.close(code=4408, reason="Authentication timeout")
         return None
     except Exception:

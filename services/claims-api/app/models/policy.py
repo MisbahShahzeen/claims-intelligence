@@ -51,6 +51,4 @@ class Policy(Base):
     coverage_limit: Mapped[Decimal] = mapped_column(Numeric(14, 2))
     deductible: Mapped[Decimal] = mapped_column(Numeric(14, 2), server_default="0")
     status: Mapped[str] = mapped_column(String(16), server_default="active")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
