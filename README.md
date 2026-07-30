@@ -134,8 +134,8 @@ Kafka stay on the host, reached via host.minikube.internal.
 
 Named deliberately rather than left to be discovered.
 
-- Dead-letter topic is not wired. The topic exists but nothing publishes to it,
-  so a permanently unparseable model response retries indefinitely.
+- No tooling to requeue a dead-lettered event. A poison message that has been
+  fixed must currently be reset by hand with a SQL update on the outbox row.
 - Clause retrieval is a weak signal at this corpus size. Precedent retrieval is
   strong (0.79-0.81 similarity at rank 1, clear margin); clause retrieval returns
   a flat spread because every clause is insurance prose about vehicles. This is
