@@ -82,6 +82,11 @@ only the transitions the server says are available.
 
 ## Measured results
 
+- Three demo scenarios produce three distinct correct verdicts: a clean claim
+  returns covered with a depreciated settlement of 106,362 against 127,971
+  claimed; a learner-permit claim returns not covered citing the unlicensed
+  driver exclusion; a delayed theft report returns risk 95 citing both the
+  notification clause and a fraud-flagged precedent
 - AI cost per claim: ~$0.014, of which roughly 74% is the coverage reasoning call
   and 2% is embeddings
 - Extraction: ~850 tokens, ~4s per text document
