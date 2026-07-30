@@ -48,3 +48,9 @@ ignore = [
 [format]
 quote-style = "double"
 indent-style = "space"
+
+# Before committing, run both:
+#   ruff check  --config ruff.toml services/ shared/ --fix
+#   ruff format --config ruff.toml services/ shared/
+# CI runs check and format --check. Running only one locally passes here and
+# fails there, which is how this file got committed unformatted twice.
