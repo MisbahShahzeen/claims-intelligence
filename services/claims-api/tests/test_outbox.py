@@ -2,14 +2,13 @@ from datetime import date
 from decimal import Decimal
 
 import pytest_asyncio
-from httpx import AsyncClient
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.models.claim import Claim
 from app.models.outbox import OutboxEvent
 from app.models.policy import Policy
 from app.models.user import User
+from httpx import AsyncClient
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 FNOL = {
     "policy_number": "MOT-2026-0001",

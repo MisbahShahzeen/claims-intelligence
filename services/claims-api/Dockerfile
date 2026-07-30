@@ -20,7 +20,8 @@ COPY services/claims-api/requirements.txt ./requirements.txt
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt \
+    && pip install ./shared
 
 
 FROM python:3.12-slim AS runtime

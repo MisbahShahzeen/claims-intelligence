@@ -69,11 +69,14 @@ jobs:
         run: |
           psql -h localhost -U postgres -d claims -f infra/postgres/init/01-extensions.sql
 
+      # The shared events package is installed separately rather than listed in
+      # requirements.txt: a relative path cannot resolve correctly from both the
+      # service directory (pip) and the repo root (docker build context).
       - name: Install dependencies
-        working-directory: services/claims-api
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+          pip install ./shared
+          pip install -r services/claims-api/requirements-dev.txt
 
       - name: Run migrations
         working-directory: services/claims-api

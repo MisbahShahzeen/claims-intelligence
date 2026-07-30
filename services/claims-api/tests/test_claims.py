@@ -3,11 +3,10 @@ from decimal import Decimal
 
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.models.policy import Policy
 from app.models.user import User
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 FNOL = {
     "policy_number": "MOT-2026-0001",

@@ -1,6 +1,5 @@
-from httpx import AsyncClient
-
 from app.models.user import User
+from httpx import AsyncClient
 
 
 async def test_login_returns_token(client: AsyncClient, adjuster: User):

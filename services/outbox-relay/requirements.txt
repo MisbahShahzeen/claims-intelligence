@@ -2,5 +2,4 @@ aiokafka
 asyncpg
 sqlalchemy[asyncio]
 pydantic-settings
-./shared
 prometheus-client

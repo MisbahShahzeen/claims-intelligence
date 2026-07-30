@@ -4,4 +4,3 @@ sqlalchemy[asyncio]
 pgvector
 pydantic-settings
 google-genai
-./shared

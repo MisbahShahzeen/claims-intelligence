@@ -8,7 +8,6 @@ bcrypt
 PyJWT
 email-validator
 
-./shared
 python-multipart
 python-multipart
 pgvector

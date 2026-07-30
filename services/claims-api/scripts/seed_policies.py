@@ -2,10 +2,9 @@ import asyncio
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import select
-
 from app.core.db import SessionLocal
 from app.models.policy import Policy
+from sqlalchemy import select
 
 POLICIES = [
     {

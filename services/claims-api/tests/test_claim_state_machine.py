@@ -2,7 +2,6 @@ import uuid
 from decimal import Decimal
 
 import pytest
-
 from app.models.claim import ClaimStatus
 from app.models.user import UserRole
 from app.services.claim_state_machine import (

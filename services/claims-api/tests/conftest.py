@@ -4,18 +4,17 @@ from pathlib import Path
 
 import pytest
 import pytest_asyncio
-from alembic.config import Config
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-
 from alembic import command
+from alembic.config import Config
 from app.core.config import get_settings
 from app.core.db import get_session
 from app.main import app
 from app.models.user import User, UserRole
 from app.schemas.user import UserCreate
 from app.services import user_service
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 TEST_DB_NAME = "claims_test"
 INIT_SQL = Path(__file__).resolve().parents[3] / "infra" / "postgres" / "init" / "01-extensions.sql"

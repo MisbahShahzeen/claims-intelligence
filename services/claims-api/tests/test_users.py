@@ -1,6 +1,5 @@
-from httpx import AsyncClient
-
 from app.models.user import User
+from httpx import AsyncClient
 
 
 async def test_admin_can_create_user(client: AsyncClient, admin: User, auth_header):
