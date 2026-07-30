@@ -298,9 +298,7 @@ class IngestionWorker:
                         consumer_group=settings.consumer_group,
                         attempts=result.attempts,
                     )
-                    await session.execute(
-                        INSERT_OUTBOX, dead_letter.to_outbox_params(letter)
-                    )
+                    await session.execute(INSERT_OUTBOX, dead_letter.to_outbox_params(letter))
 
 
 async def main() -> None:
